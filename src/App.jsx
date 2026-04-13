@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Agentation } from "agentation";
 import { translations } from "./i18n.js";
 
@@ -177,38 +178,45 @@ function LanguageToggle({ lang, toggleLang }) {
     <button
       onClick={toggleLang}
       aria-label="Toggle language"
-      className="fixed bottom-6 right-6 z-50 size-12 rounded-full bg-ink shadow-[0_8px_24px_rgba(43,40,36,0.25)] hover:shadow-[0_12px_32px_rgba(43,40,36,0.35)] hover:scale-110 active:scale-95 transition-all overflow-hidden"
+      className="fixed bottom-6 right-6 z-50 group"
     >
-      {/* Two halves split diagonally */}
-      <div className="relative size-full">
-        {/* Active language indicator — top-left triangle */}
+      {/* Outer: spinning light ring */}
+      <div className="relative size-14 rounded-full hover:scale-110 active:scale-95 transition-transform">
+        {/* Spinning gradient border */}
         <div
-          className="absolute inset-0 transition-colors duration-300"
+          className="absolute inset-0 rounded-full lang-toggle-glow"
           style={{
-            background: lang === "zh"
-              ? "linear-gradient(135deg, #d4c9a8 50%, transparent 50%)"
-              : "linear-gradient(135deg, transparent 50%, #d4c9a8 50%)",
+            background: "conic-gradient(from 0deg, #6B7D5A, #d4c9a8, #2B2824, #6B7D5A)",
           }}
         />
-        {/* 中 top-left */}
-        <span
-          className={
-            "absolute top-[8px] left-[10px] text-[13px] leading-none transition-colors duration-300 " +
-            (lang === "zh" ? "text-ink font-bold" : "text-cream/70")
-          }
-          style={{ fontFamily: "var(--font-serif-cn)" }}
-        >
-          中
-        </span>
-        {/* EN bottom-right */}
-        <span
-          className={
-            "absolute bottom-[8px] right-[8px] font-mono text-[10px] leading-none font-semibold transition-colors duration-300 " +
-            (lang === "en" ? "text-ink" : "text-cream/70")
-          }
-        >
-          EN
-        </span>
+        {/* Inner circle */}
+        <div className="absolute inset-[2px] rounded-full bg-ink flex items-center justify-center shadow-[0_8px_24px_rgba(43,40,36,0.3)]">
+          {/* Language labels */}
+          <div className="relative flex items-center gap-0">
+            <span
+              className={
+                "text-[14px] leading-none transition-all duration-300 " +
+                (lang === "zh"
+                  ? "text-[#d4c9a8] font-bold scale-110"
+                  : "text-cream/30 scale-90")
+              }
+              style={{ fontFamily: "var(--font-serif-cn)" }}
+            >
+              中
+            </span>
+            <span className="text-cream/20 text-[10px] mx-0.5">/</span>
+            <span
+              className={
+                "font-mono text-[10px] leading-none font-semibold transition-all duration-300 " +
+                (lang === "en"
+                  ? "text-[#d4c9a8] scale-110"
+                  : "text-cream/30 scale-90")
+              }
+            >
+              EN
+            </span>
+          </div>
+        </div>
       </div>
     </button>
   );
@@ -255,21 +263,21 @@ function SubBar({ t }) {
 /* ---------------------------------- HERO ---------------------------------- */
 function HeroSection({ t }) {
   return (
-    <section className="flex w-full items-start py-10 px-6 md:px-16 gap-10 lg:gap-16 flex-col lg:flex-row">
+    <section className="flex w-full items-start py-10 px-6 md:px-16 gap-10 lg:gap-12 xl:gap-16 flex-col lg:flex-row overflow-hidden">
       {/* Mobile: card carousel first — scaled down */}
       <div className="flex flex-col w-full lg:hidden gap-4 max-w-[340px] mx-auto">
         <FeatureCarousel t={t} />
       </div>
       {/* Left: big type — Chinese name primary, English name secondary */}
-      <div className="flex flex-col lg:grow-[1.25] lg:basis-0 w-full">
+      <div className="flex flex-col lg:shrink-0 lg:w-[54%] w-full">
         <div
-          className="text-[clamp(72px,12vw,160px)] tracking-[0.02em] leading-[0.92] text-ink font-normal font-serif-cn"
+          className="text-[clamp(64px,9vw,130px)] tracking-[0.02em] leading-[0.92] text-ink font-normal font-serif-cn"
           style={{ fontFamily: "var(--font-serif-cn)" }}
         >
           {t.hero.first}
         </div>
         <div className="flex items-end mt-1 gap-4">
-          <div className="text-[clamp(36px,6vw,88px)] tracking-[-0.03em] leading-[0.9] text-ink font-serif font-light italic">
+          <div className="text-[clamp(32px,4.5vw,72px)] tracking-[-0.03em] leading-[0.9] text-ink font-serif font-light italic">
             {t.hero.last}
           </div>
           <div className="text-[clamp(20px,3vw,40px)] pb-2 text-sage font-serif font-light">
@@ -302,7 +310,7 @@ function HeroSection({ t }) {
       </div>
 
       {/* Right: feature card carousel (desktop only — mobile is above) */}
-      <div className="hidden lg:flex flex-col w-full lg:grow lg:basis-0 lg:pt-6 lg:max-w-[480px] xl:max-w-[520px] lg:mx-auto gap-4">
+      <div className="hidden lg:flex flex-col lg:flex-1 lg:min-w-0 gap-4">
         <FeatureCarousel t={t} />
       </div>
     </section>
@@ -336,15 +344,15 @@ function FeatureCarousel({ t }) {
 
   const positionStyles = {
     center: "z-30 scale-100 rotate-0 opacity-100 translate-x-0",
-    left: "z-10 scale-[0.85] -rotate-6 opacity-70 -translate-x-[6%] md:-translate-x-[15%]",
-    right: "z-10 scale-[0.85] rotate-6 opacity-70 translate-x-[6%] md:translate-x-[15%]",
+    left: "z-10 scale-[0.85] -rotate-6 opacity-70 -translate-x-[6%] md:-translate-x-[10%]",
+    right: "z-10 scale-[0.85] rotate-6 opacity-70 translate-x-[6%] md:translate-x-[10%]",
     hidden: "z-0 scale-[0.8] opacity-0 translate-x-0",
   };
 
   return (
     <div className="flex flex-col gap-6">
       {/* Stacked card deck */}
-      <div className="relative" style={{ minHeight: "clamp(280px, 42vw, 480px)" }}>
+      <div className="relative" style={{ minHeight: "clamp(280px, 32vw, 440px)" }}>
         {features.map((f, i) => {
           const pos = getPosition(i);
           return (
@@ -550,11 +558,11 @@ function ProofModal({ proof, title, tier, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 backdrop-blur-md p-3 md:p-6"
       onClick={onClose}
     >
       <div
-        className="relative bg-white rounded-[18px] shadow-[0_24px_64px_rgba(43,40,36,0.25)] max-w-[720px] w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="relative bg-white rounded-[14px] md:rounded-[18px] shadow-[0_24px_64px_rgba(43,40,36,0.25)] max-w-[720px] w-full max-h-[85vh] md:max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -621,13 +629,14 @@ function CertsList({ certs, title }) {
           </button>
         ))}
       </div>
-      {viewCert && (
+      {viewCert && createPortal(
         <ProofModal
           proof={viewCert.href}
           title={viewCert.name}
           tier="merit"
           onClose={() => setViewCert(null)}
-        />
+        />,
+        document.body
       )}
     </div>
   );
@@ -691,13 +700,14 @@ function CompetitionsList({ data }) {
       </ul>
 
       {/* Modal */}
-      {viewProof && (
+      {viewProof && createPortal(
         <ProofModal
           proof={viewProof.proof}
           title={viewProof.title}
           tier={viewProof.tier}
           onClose={() => setViewProof(null)}
-        />
+        />,
+        document.body
       )}
     </div>
   );
@@ -747,7 +757,7 @@ function CoreSkillsSection({ t }) {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 reveal-stagger">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 reveal-stagger skill-grid">
         {t.core.cards.map((card, i) => (
           <Reveal key={i}>
             <FlipCard card={card} index={i} />
@@ -760,23 +770,20 @@ function CoreSkillsSection({ t }) {
 
 function FlipCard({ card, index }) {
   const [flipped, setFlipped] = useState(false);
-  const [hasClicked, setHasClicked] = useState(false);
-  const handleClick = () => {
-    setHasClicked(true);
-    setFlipped((f) => !f);
-  };
   return (
     <div
-      className={"group [perspective:1200px] min-h-[320px] cursor-pointer" + (!hasClicked ? "" : "")}
-      onClick={handleClick}
+      className={
+        "group [perspective:1200px] min-h-[320px] cursor-pointer " +
+        (!flipped ? "flip-hint" : "")
+      }
+      style={{ "--peek-delay": `${[0, 2.7, 1.3, 4.1][index] || 0}s`, "--shake-duration": `${[4.5, 5.8, 5.1, 6.3][index] || 5}s` }}
+      onClick={() => setFlipped((f) => !f)}
     >
       <div
         className={
           "relative w-full h-full min-h-[320px] transition-transform duration-700 ease-out [transform-style:preserve-3d] " +
-          (!flipped && !hasClicked ? "flip-hint " : "") +
-          (flipped ? "[transform:rotateY(180deg)]" : hasClicked ? "" : "lg:group-hover:[transform:rotateY(180deg)]")
+          (flipped ? "[transform:rotateY(180deg)]" : "group-hover:[transform:rotateY(180deg)]")
         }
-        style={{ "--peek-delay": `${[0, 2.7, 1.3, 4.1][index] || 0}s`, "--shake-duration": `${[4.5, 5.8, 5.1, 6.3][index] || 5}s` }}
       >
         {/* Front face */}
         <div className="absolute inset-0 [backface-visibility:hidden] [-webkit-backface-visibility:hidden] flex flex-col rounded-[18px] gap-[18px] bg-white border border-border-soft p-7">
@@ -926,12 +933,13 @@ function WorkHeroCard({ item }) {
         )}
       </div>
 
-      {galleryOpen && (
+      {galleryOpen && createPortal(
         <ProjectGallery
           images={galleryImages}
           title={item.title.replace("\n", " ")}
           onClose={() => setGalleryOpen(false)}
-        />
+        />,
+        document.body
       )}
     </>
   );
@@ -941,7 +949,7 @@ function ProjectGallery({ images, title, onClose }) {
   const [active, setActive] = useState(0);
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-3 md:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 backdrop-blur-md p-3 md:p-6"
       onClick={onClose}
     >
       {/* Left arrow — outside container */}
@@ -977,14 +985,14 @@ function ProjectGallery({ images, title, onClose }) {
           </button>
         </div>
         {/* Main image */}
-        <div className="flex-1 overflow-auto bg-cream p-3 md:p-5 flex items-center justify-center min-h-[200px] md:min-h-[400px]">
+        <div className="flex-1 overflow-auto bg-cream p-3 md:p-5 flex items-center justify-center min-h-[200px] md:min-h-[400px] relative">
           <img
             src={images[active]}
             alt={`${title} — ${active + 1}`}
             className="max-w-full max-h-[50vh] md:max-h-[60vh] object-contain rounded-lg"
           />
-          {/* Mobile nav arrows (inside container) */}
-          <div className="md:hidden absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
+          {/* Mobile nav arrows */}
+          <div className="md:hidden absolute inset-x-3 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
             <button
               onClick={(e) => { e.stopPropagation(); setActive((active - 1 + images.length) % images.length); }}
               className="pointer-events-auto flex items-center justify-center size-9 rounded-full bg-white/80 shadow-md"
@@ -1221,12 +1229,13 @@ function StudioStrip({ studio }) {
         </div>
       </div>
 
-      {viewImage && (
+      {viewImage && createPortal(
         <DesignGallery
           projects={studio.projects.filter((p) => p.image)}
           initial={studio.projects.filter((p) => p.image).findIndex((p) => p.name === viewImage.name)}
           onClose={() => setViewImage(null)}
-        />
+        />,
+        document.body
       )}
     </>
   );
@@ -1237,7 +1246,7 @@ function DesignGallery({ projects, initial, onClose }) {
   const p = projects[active];
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-3 md:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/80 backdrop-blur-md p-3 md:p-6"
       onClick={onClose}
     >
       {/* Left arrow */}
@@ -1278,7 +1287,7 @@ function DesignGallery({ projects, initial, onClose }) {
             className="max-w-full max-h-[55vh] md:max-h-[75vh] object-contain rounded-lg"
           />
           {/* Mobile nav arrows */}
-          <div className="md:hidden absolute inset-x-2 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
+          <div className="md:hidden absolute inset-x-3 top-1/2 -translate-y-1/2 flex justify-between pointer-events-none">
             <button
               onClick={(e) => { e.stopPropagation(); setActive((active - 1 + projects.length) % projects.length); }}
               className="pointer-events-auto flex items-center justify-center size-9 rounded-full bg-white/80 shadow-md"

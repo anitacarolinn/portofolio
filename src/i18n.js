@@ -35,7 +35,7 @@ export const translations = {
         year: "2025 — 2026",
         title: "ResQBand\nSafety Belt",
         heading: "Arduino-powered patient restraint monitoring",
-        body: "My senior thesis: a production-grade patient safety system. Arduino sensors detect motion and timing events on hospital restraints; a Python WebSocket backend streams alerts to a Flutter mobile dashboard for nurses — with voice notes, bilingual UI, and role-based access.",
+        body: "Senior thesis — Arduino sensors on hospital restraints stream alerts via Python WebSocket to a Flutter nurse dashboard. Bilingual UI, voice notes, role-based access.",
         tags: ["Flutter", "Python", "Arduino", "SQL Server"],
       },
       {
